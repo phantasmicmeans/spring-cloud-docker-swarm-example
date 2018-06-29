@@ -1,0 +1,89 @@
+# 외부 DB 설정시 아래의 주석을 활성화 시킨 후 관련 DB 설정 정보를 입력한다.
+#spring:
+#  datasource:
+#    url: jdbc:mysql://localhost:3306/memberapi2
+#    tomcat:
+#      connection-properties: useUnicode=true;characterEncoding=utf-8
+#      validationQuery: SELECT 1
+#    driverClassName: com.mysql.jdbc.Driver
+#    username: root
+#    password: admin1234
+#    dbcp2:
+#      test-while-idle: true
+#  jpa:
+#    hibernate:
+#      ddl-auto: update
+#      naming:
+#        implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl
+#        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+#        strategy: org.hibernate.cfg.ImprovedNamingStrategy
+#    generate-ddl: true
+#    database: MYSQL
+#    show-sql: true
+#    properties:
+#      hibernate:
+#        format_sql: true  
+#        dialect: org.hibernate.dialect.MySQL5Dialect
+
+
+#spring:
+#  jpa:
+#    hibernate:
+#      ddl-auto: update
+#      naming:
+#        implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl
+#        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+#    generate-ddl: true
+#    database: MYSQL
+#    show-sql: true
+#    properties:
+#      hibernate.format_sql: true  
+#  datasource:
+#    url: jdbc:mysql://localhost:3306/memberapi
+#    tomcat:
+#      connection-properties: useUnicode=true;characterEncodig=utf-8
+#      validation-query: SELECT 1
+#    username: root
+#    password: admin1234
+#    dbcp2:
+#      test-while-idle: true
+#    driver-class-name: com.mysql.jdbc.Driver
+
+server:
+    port: 8081
+
+
+spring:
+    application:
+        name: auth-service
+    jpa:
+        hibernate:
+            ddl-auto: update
+            show-sql: true
+  
+    datasource:
+        url: jdbc:mysql://192.168.10.178:3306/memberapi2
+        tomcat:
+            connection-properties: useUnicode=true;characterEncoding=utf-8;serverTimezone=UTC;
+        username: sangmin
+        password: tkdals12
+        driver-class-name: com.mysql.jdbc.Driver
+
+
+spring.h2.console:
+    enabled: true
+    path: /h2-console
+
+security:
+    user:
+        name: seulki
+        password: a1234
+
+    oauth2:
+        authorization:
+        token-key-access: isAuthenticated()
+
+logging.level:
+    org.springframework:
+        security: debug
+        boot: debug

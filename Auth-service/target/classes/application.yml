@@ -1,0 +1,22 @@
+server:
+    port: 8081
+
+eureka:
+    client:
+        healthcheck: true
+        fetch-registry: true
+        preferIpAddress: true
+
+        serviceUrl:
+            defaultZone: http://192.168.10.168:8761/eureka/
+
+    instance:
+        hostname: 192.168.10.178
+        statusPageUrlPath: https://${eureka.instance.hostname}/info
+        #statusPageUrlPath: https://192.168.10.176:${server.port}/info
+        #healthCheckUrlPath:  https://192.168.10.176:${server.port}/health
+        #homePageUrl: https:// 192.168.10.176:${server.port}/
+        healthCheckUrlPath: https://${eureka.instance.hostname}/health
+        homePageUrl: https://${eureka.instance.hostname}/
+
+

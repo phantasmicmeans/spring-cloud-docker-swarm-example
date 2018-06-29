@@ -1,0 +1,5 @@
+/home/sangmin/MSA/Service/Auth-service/src/main/java/com/example/demo/service/CustomedUserDetailsService.java
+/home/sangmin/MSA/Service/Auth-service/src/main/java/com/example/demo/rest/MemberController.java
+/home/sangmin/MSA/Service/Auth-service/src/main/java/com/example/demo/repository/MemberRepository.java
+/home/sangmin/MSA/Service/Auth-service/src/main/java/com/example/demo/OAuth2Application.java
+/home/sangmin/MSA/Service/Auth-service/src/main/java/com/example/demo/domain/Member_role.java

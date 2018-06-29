@@ -1,0 +1,16 @@
+server:
+    port: 8081
+
+eureka:
+    client:
+        healthcheck: true
+        fetch-registry: true
+        preferIpAddress: true
+        serviceUrl:
+            defaultZone: http://{eureka-address}:8761/eureka/
+            
+    instance:
+        preferIpAddress: true
+
+
+
