@@ -1,0 +1,75 @@
+spring:
+    profiles:
+        active: local
+
+    application:
+        name: story-service
+          
+    jpa: 
+      hibernate:
+        ddl-auto: update
+        show_sql: true
+        use_sql_comments: true
+        fotmat_sql: true
+        
+    datasource:
+      url: jdbc:mysql://13.209.77.24:3306/story
+      username: sangmin
+      password: tkdals12
+      driver-class-name: com.mysql.jdbc.Driver
+      hikari:
+        maximum-pool-size: 2
+server:
+    port: 8768
+
+eureka:
+    client:
+        healthcheck: true 
+        fetch-registry: true
+        serviceUrl:
+            defaultZone: http://13.125.249.86:8761/eureka/
+    instance:
+        instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+        preferIpAddress: true
+
+---
+
+spring:
+    profiles: docker 
+
+    cloud:
+        inetutils:
+            prefered-networks:
+                - 10.0
+    application:
+        name: story-service
+          
+    jpa: 
+      hibernate:
+        ddl-auto: update
+        show_sql: true
+        use_sql_comments: true
+        fotmat_sql: true
+        
+    datasource:
+      url: jdbc:mysql://13.209.77.24:3306/story
+      username: sangmin
+      password: tkdals12
+      driver-class-name: com.mysql.jdbc.Driver
+      hikari:
+        maximum-pool-size: 2
+
+          
+server:
+    port: 8768
+
+eureka:
+    client:
+        healthcheck: true 
+        fetch-registry: true
+        serviceUrl:
+            defaultZone: http://13.125.249.86:8761/eureka/
+    instance:
+        instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+        preferIpAddress: true
+

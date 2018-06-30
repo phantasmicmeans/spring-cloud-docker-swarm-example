@@ -1,0 +1,7 @@
+com/story/StoryserviceApplication.class
+com/story/domain/Story.class
+com/story/rest/StoryController.class
+com/story/service/StoryService.class
+com/story/repository/StoryRepository.class
+com/story/service/StoryServiceImpl.class
+com/story/rest/StoryController$1.class
