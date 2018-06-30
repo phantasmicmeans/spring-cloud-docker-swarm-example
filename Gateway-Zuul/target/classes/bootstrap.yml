@@ -1,0 +1,7 @@
+spring:
+    application:
+        name: zuul-service
+        #    security:
+        #user:
+        #    name: user
+        #    password: test
