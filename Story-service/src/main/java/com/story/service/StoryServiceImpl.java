@@ -25,23 +25,25 @@ public class StoryServiceImpl implements StoryService {
 	private StoryRepository storyRepository;
 	
 	@Override
-	public List<Story> findAllStory()
+	public Optional<List<Story>> findAllStory()
 	{
 		
-		Optional<List<Story>> maybeStoryIter = Optional.ofNullable(storyRepository.findAllStory(PageRequest.of(0,15)));
+		try { 
+			return Optional.of(storyRepository.findAllStory(PageRequest.of(0,15))); 
+		}
+		catch(Exception e){ return null; }		
 
-		
-		return maybeStoryIter.get();
 
 	}
 	
 	@Override
-	public List<Story> findStoryById(String ID)
+	public Optional<List<Story>> findStoryById(String ID)
 	{
 		
-		Optional<List<Story>> maybeStory = Optional.ofNullable(storyRepository.findStoryByUserIDs(ID, PageRequest.of(0, 5)));
-
-		return maybeStory.get();
+		try {
+			return Optional.of(storyRepository.findStoryByUserIDs(ID, PageRequest.of(0, 5)));			
+		}
+		catch(Exception e){ return null; }
 		 
 	}
 	
@@ -49,43 +51,21 @@ public class StoryServiceImpl implements StoryService {
 	public Boolean saveStory(Story story)
 	{
 		try {
-			
-			Optional<Story> maybeStory = Optional.of(story);
-			
-			storyRepository.save(maybeStory.get());
-			
-			logger.info("saved");
-			
+			storyRepository.save(Optional.ofNullable(story).get());
 			return true;
 			
-		}catch(Exception e)
-		{
-			logger.info("Nothing to save");
-			
-			return false;
-		}
+		}catch(Exception e){ return false; }
+		
 	}
 	
 	@Override
 	public Boolean deleteStory(String ID)
 	{
-		try {
-			
-			Optional <List<Story>> maybeStory = Optional.of(storyRepository.findStoryById(ID));
-			
+		try {	
 			storyRepository.deleteStoryByUserId(ID);
-			
-			logger.info("removed");
-			
 			return true;
 			
-		}catch(Exception e)
-		{
-			logger.info("Nothing to remove");
-			
-			return false;
-			
-		}
+		}catch(Exception e){ return false; }
 			
 	}
 	

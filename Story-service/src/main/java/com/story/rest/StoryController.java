@@ -1,15 +1,20 @@
 package com.story.rest;
 
+import java.net.URI;
 import java.util.List;
 import java.util.Optional;
-import org.springframework.http.HttpHeaders;
-import java.net.URI;
+import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.ArrayList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.client.ServiceInstance;
+import org.springframework.cloud.client.discovery.DiscoveryClient;
+import org.springframework.context.annotation.Bean;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -18,22 +23,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
+
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 import com.story.domain.Story;
 import com.story.service.StoryService;
-import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
-import org.springframework.cloud.client.discovery.DiscoveryClient;
-import org.springframework.cloud.client.ServiceInstance;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.beans.factory.annotation.Value;
-import java.util.Arrays;
-import org.springframework.context.annotation.Bean;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpMethod;
-import com.netflix.appinfo.InstanceInfo;
-import java.util.function.Function;
 
 @CrossOrigin(origins ="*")
 @RestController
@@ -44,6 +39,17 @@ public class StoryController {
     @Autowired
     private DiscoveryClient discoveryClient;
 
+    @FunctionalInterface
+    interface Convert<F,T>{
+    	T convert(F from);
+    }
+   
+    private Convert<ServiceInstance, String> converter = (from) ->{
+    	
+    	return from.getHost() + ":" + from.getPort() +"/story";
+   
+    };
+    
     @Bean
     public RestTemplate restTemplate() {
         return new RestTemplate();
@@ -62,38 +68,31 @@ public class StoryController {
 	@RequestMapping(value = "/story", method = RequestMethod.GET)
 	public ResponseEntity<List<Story>> getAllStory()
 	{
-		try{
-
-		    Optional<List<Story>> maybeAllStory = Optional.of(storyService.findAllStory());
-
-		    return new ResponseEntity<List<Story>>(maybeAllStory.get(), HttpStatus.OK);
-
-        }catch(Exception e)
-        {
-            return new ResponseEntity<List<Story>>(HttpStatus.NOT_FOUND);
-        }
+		try {
+			return new ResponseEntity<List<Story>>
+				(storyService.findAllStory().orElseThrow(() -> new NullPointerException()), HttpStatus.OK);
+		}
+		catch(NullPointerException e) {
+			return new ResponseEntity<List<Story>>(HttpStatus.NOT_FOUND);
+		}
 	}
-
 
     public ResponseEntity<List<Story>>  getAllStoryFallback()
     {
         try{
 
-            Optional<List<ServiceInstance>> maybeServiceInstance 
-                = Optional.of(this.discoveryClient.getInstances("story-service"));
-        
-            List<ServiceInstance> Instance 
-                = maybeServiceInstance.get().stream()
-                                            .filter(service -> 
-                                                    !instance_id.equals(service.getServiceId()))
-                                            .collect(Collectors.toList());
-
-            ServiceInstance service = Instance.get(0);
-        
-            URI uri = URI.create(service.getHost() + ":" + service.getPort() + "/story");
+        	final String serviceName="story-service";
+        	
+            List<String> Instances
+                = this.discoveryClient.getInstances(serviceName)
+                								.stream()
+                									.filter((service) -> 
+                                                    		!instance_id.equals(service.getServiceId()))
+                									.map((service) -> converter.convert(service))
+                									.collect(Collectors.toList());
 
             ResponseEntity <List<Story>> rest =
-				    restTemplate.exchange(uri, HttpMethod.GET,null, new ParameterizedTypeReference<List<Story>>() {});
+				    restTemplate.exchange(URI.create(Instances.get(0)), HttpMethod.GET,null, new ParameterizedTypeReference<List<Story>>() {});
             
             return new ResponseEntity<List<Story>>(rest.getBody(), HttpStatus.OK);
 
@@ -109,15 +108,13 @@ public class StoryController {
 	@RequestMapping(value = "/story/{id}", method = RequestMethod.GET)
 	public ResponseEntity<List<Story>> getStoryById(@PathVariable("id") final String ID)
 	{
-
+		
 		try {
 			
-			Optional <List<Story>> maybeStoryById = Optional.of(storyService.findStoryById(ID));
+			return new ResponseEntity<List<Story>>(storyService.findStoryById(ID).orElseThrow(() -> new NullPointerException()),HttpStatus.OK);
 			
-			return new ResponseEntity<List<Story>>(maybeStoryById.get(),HttpStatus.OK);
+		}catch(NullPointerException e) {
 			
-		}catch(Exception e)
-		{
 			return new ResponseEntity<List<Story>>(HttpStatus.NOT_FOUND);
 		}
 		
@@ -147,7 +144,7 @@ public class StoryController {
     public String getHostName()
     {
         try{        
-            logger.info("input !!");
+        	
            return System.getenv("HOSTNAME");
 
         }
