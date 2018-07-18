@@ -9,8 +9,8 @@ public class CacheManagerCheck implements CommandLineRunner {
 	
 	private static final Logger logger = LoggerFactory.getLogger(CacheManagerCheck.class);
 	
-	private final CacheManager cacheManager ; //singletone cache , 최초 한번 호출될 때에만 CacheMange의 초기화 작업이 수행되므, 이후 동일한 CacheManager인스턴스를 리턴하게 됨.
-
+	private final CacheManager cacheManager ; 
+	
 	public CacheManagerCheck(CacheManager cacheManager)
 	{
 		this.cacheManager=cacheManager;

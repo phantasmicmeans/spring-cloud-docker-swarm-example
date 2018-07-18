@@ -2,13 +2,9 @@ package com.alarm.rest;
 
 import java.util.List;
 import java.util.Optional;
-import org.springframework.http.HttpHeaders;
 import java.net.URI;
 import java.util.stream.Collectors;
-import java.util.ArrayList;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,28 +15,23 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
 import org.springframework.web.bind.annotation.CrossOrigin;
-import java.net.InetAddress;
 
 import com.alarm.domain.Notice;
 import com.alarm.service.NoticeService;
 
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
+
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.beans.factory.annotation.Value;
-import java.util.Arrays;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
-import com.netflix.appinfo.InstanceInfo;
-import java.util.function.Function;
+
 @RestController
 @CrossOrigin(origins="*")
 public class NoticeController {
-
-	private final Logger logger = LoggerFactory.getLogger(this.getClass());
-    public static List<Notice> Temp;
 
     @Autowired
     private DiscoveryClient discoveryClient;
@@ -49,61 +40,46 @@ public class NoticeController {
     public RestTemplate restTemplate() {
         return new RestTemplate();
     }
+    
 	@Value("${eureka.instance.instance-id}")
 	String instance_id;
 	
 	@Autowired
 	RestTemplate restTemplate;
 	
-
 	@Autowired
 	private NoticeService noticeService;
 
+	@FunctionalInterface
+	interface Convert<F,T>{
+		T convert(F from, String uri);
+	}
+	
+	private Convert<ServiceInstance, String> converters = (from, uri) -> {
+		
+		return from.getHost() + ":" + from.getPort() + uri;
+	};
+	
 	@HystrixCommand(commandKey="notice-service",fallbackMethod = "getAllNoticeFallback")
 	@RequestMapping(value = "/notice", method=RequestMethod.GET)
 	public ResponseEntity<List<Notice>> getAllNotice(){
-    
-        try{
 
-		    Optional<List<Notice>> maybeAllNotice = Optional.ofNullable(noticeService.findAllNotice());
-		
-		    return new ResponseEntity<List<Notice>>(maybeAllNotice.get(), HttpStatus.OK);
-        }catch(Exception e)
-        {
-            return new ResponseEntity<List<Notice>>(HttpStatus.NOT_FOUND);
+		try {
 
-        }
+			return new ResponseEntity<List<Notice>>
+				(noticeService.findAllNotice().orElseThrow(() -> new NullPointerException()), HttpStatus.OK);
+		}
+		catch(NullPointerException e) {
+			return new ResponseEntity<List<Notice>>(HttpStatus.NOT_FOUND);
+		}
 	
 	}	
 
    	public ResponseEntity<List<Notice>>  getAllNoticeFallback()
     {
-        try{
-
-            Optional<List<ServiceInstance>> maybeServiceInstance 
-                = Optional.of(this.discoveryClient.getInstances("notice-service"));
+   		String uri = "/notice";
+   		return CatchOtherInstanceFromEurekaRegistry(instance_id,uri);
         
-            List<ServiceInstance> Instance 
-                = maybeServiceInstance.get().stream()
-                                            .filter(service -> 
-                                                    !instance_id.equals(service.getServiceId()))
-                                            .collect(Collectors.toList());
-
-            ServiceInstance service = Instance.get(0);
-        
-            URI uri = URI.create(service.getHost() + ":" + service.getPort() + "/notice");
-
-            ResponseEntity <List<Notice>> rest =
-				    restTemplate.exchange(uri, HttpMethod.GET,null, new ParameterizedTypeReference<List<Notice>>() {});
-            
-            return new ResponseEntity<List<Notice>>(rest.getBody(), HttpStatus.OK);
-
-        }catch(Exception e)
-        {
-			e.printStackTrace();
-        }
-        
-        return null;
     }
 
 
@@ -111,28 +87,27 @@ public class NoticeController {
 	@RequestMapping(value="/notice/{receiver_id}", method = RequestMethod.GET)
 	public ResponseEntity<List<Notice>> getAllNoticeByReceiverId(@PathVariable("receiver_id") final String receiver_id)
 	{
-
+		
 		try {
 			
-			Optional<List<Notice>> maybeSelectedNotice = Optional.of(noticeService.findAllNoticeByReceiverId(receiver_id));
-		
-			return new ResponseEntity<List<Notice>>(maybeSelectedNotice.get(), HttpStatus.OK);
+			return new ResponseEntity<List<Notice>>
+				(noticeService.findAllNoticeByReceiverId(receiver_id).orElseThrow(() -> new NullPointerException()),HttpStatus.OK);
 			
-		}catch(Exception e)
-		{
+		}catch(NullPointerException e) {
+			
 			return new ResponseEntity<List<Notice>>(HttpStatus.NOT_FOUND);
 		}
-	
 
 	}
 
-    public ResponseEntity<List<Notice>> getAllNoticeByReceiverIdFallback()
+    public ResponseEntity<List<Notice>> getAllNoticeByReceiverIdFallback(@PathVariable("receiver_id") final String receiver_id)
     {
-        return null;
+    	String uri = "/notice/"+receiver_id;
+   		return CatchOtherInstanceFromEurekaRegistry(instance_id, uri);
+
     }
 
 	
-
 	//receiver_id를 인자로 최근 10개 notice 출
 	@HystrixCommand(commandKey="notice-service",fallbackMethod = "getLatestNoticeByReceiverIdFallback")
 	@RequestMapping(value="/notice/latest/{receiver_id}",method = RequestMethod.GET)
@@ -141,41 +116,37 @@ public class NoticeController {
 
 		try {
 			
-			Optional<List<Notice>>maybeLastsNotice = Optional.of(noticeService.findLatestNoticeByReceiverId(receiver_id));
+			return new ResponseEntity<List<Notice>>
+				(noticeService.findLatestNoticeByReceiverId(receiver_id).orElseThrow(() -> new NullPointerException()),HttpStatus.OK);
 			
-			return new ResponseEntity<List<Notice>>(maybeLastsNotice.get() , HttpStatus.OK);
+		}catch(NullPointerException e) {
 			
-		}catch(Exception e)
-		{
 			return new ResponseEntity<List<Notice>>(HttpStatus.NOT_FOUND);
-
 		}
-	
+		
 	}
-    public ResponseEntity <List<Notice>> getLatestNoticeByReceiverIdFallback()
+    public ResponseEntity <List<Notice>> getLatestNoticeByReceiverIdFallback(@PathVariable("receiver_id") final String receiver_id)
     {
-        return null;
-    }
+    	String uri = "/notice/"+receiver_id;
+   		return CatchOtherInstanceFromEurekaRegistry(instance_id, uri);    
+   	}
 
 
 	//receiver_id와 현재 index를 인자로 이 10개 notice 출력
 	@RequestMapping(value="/notice/previous/{receiver_id}/{id}",method = RequestMethod.GET)
 	public ResponseEntity<List<Notice>> getPreviousNoticeByReceiverId(@PathVariable("receiver_id") final String receiver_id, @PathVariable("id") final int id)
 	{
-		
-		try {		
+
+		try {
 			
-			Optional<List<Notice>> maybePreviousNotice = Optional.of(noticeService.findPreviousNoticeByReceiverId(receiver_id, id));
+			return new ResponseEntity<List<Notice>>
+				(noticeService.findPreviousNoticeByReceiverId(receiver_id, id).orElseThrow(() -> new NullPointerException()),HttpStatus.OK);
 			
-			return new ResponseEntity<List<Notice>>(maybePreviousNotice.get(), HttpStatus.OK);
+		}catch(NullPointerException e) {
 			
-		}catch(Exception e)
-		{
 			return new ResponseEntity<List<Notice>>(HttpStatus.NOT_FOUND);
 		}
-	
 	}
-	
 	
 	@RequestMapping(value="/notice", method = RequestMethod.POST)
 	public ResponseEntity<Void> createNotice(@RequestBody final Notice notice, final UriComponentsBuilder ucBuilder){
@@ -186,9 +157,6 @@ public class NoticeController {
 
 	}
 	
-
-
-
     @HystrixCommand(commandKey="notice-service", fallbackMethod = "getHostNameFallback")
     @RequestMapping("/notice/service/host")
     public String serviceContainer()
@@ -205,8 +173,7 @@ public class NoticeController {
     }
     public String getHostNameFallback()
     {
-
-        return "Default Host";
+        return "Hystrix Circuit Open.. Cannot find HostName";
     }
 
 
@@ -216,10 +183,8 @@ public class NoticeController {
 
         try{
 
-            Optional<List<ServiceInstance>> maybeInstance = Optional.of(this.discoveryClient.getInstances(applicationName));
-
-            return maybeInstance.get();
-        
+            return this.discoveryClient.getInstances(applicationName);
+            
         }catch(Exception e)
         {
             return null;
@@ -239,24 +204,50 @@ public class NoticeController {
 
             Optional <List<ServiceInstance>> maybeServiceInstance = Optional.of(this.discoveryClient.getInstances(applicationName));
 
-            Function<String,String> makeResult = result -> result;
 
             ServiceInstance service = maybeServiceInstance.get().get(0);
 
-            return makeResult.apply("ServiceID: " + service.getServiceId()+
-                                    ", Host: " + service.getHost()+
-                                    ", Port: " + Integer.toString(service.getPort()));
+            return "ServiceID: " + service.getServiceId()+
+            		", Host: " + service.getHost()+
+            		", Port: " + Integer.toString(service.getPort());
 
         }catch(Exception e)
         {
-            return "Cannot Found Instance " + applicationName;
+            return "Hystrix Circuit Open.. Cannot find "+applicationName;
         }
     }
     
     public String getServiceInfoFallback(@PathVariable String applicationName)
     {
-        return "Default Value";
+        return "Hystrix Circuit Open.. Cannot find "+applicationName;
     }
+    
+    
+ 	public ResponseEntity<List<Notice>> CatchOtherInstanceFromEurekaRegistry(String instance, String uri)
+    {
+        try{
+
+            Optional<List<ServiceInstance>> maybeServiceInstance 
+                = Optional.of(this.discoveryClient.getInstances(instance));
+        
+            List<String> Instances
+                = maybeServiceInstance.get().stream()
+                                            .filter(service -> 
+                                                    !instance_id.equals(service.getServiceId()))
+        									.map((service) -> converters.convert(service, uri))
+                                            .collect(Collectors.toList());
+
+            ResponseEntity <List<Notice>> rest =
+ 				    restTemplate.exchange(URI.create(Instances.get(0)), HttpMethod.GET,null, new ParameterizedTypeReference<List<Notice>>() {});
+
+            return new ResponseEntity<List<Notice>>(rest.getBody(), HttpStatus.OK);
+
+        }catch(Exception e)
+        {
+            return new ResponseEntity<List<Notice>>(HttpStatus.NOT_FOUND);
+        }
+    }
+
 }
 
 

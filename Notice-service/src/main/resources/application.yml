@@ -13,9 +13,9 @@ spring:
         fotmat_sql: true
         
     datasource:
-      url: jdbc:mysql://13.209.77.24:3306/notice
-      username: sangmin
-      password: tkdals12
+      url: jdbc:mysql://{YOUR_MYSQL_ADDRESS}:3306/notice
+      username: {MYSQL_ID}
+      password: {MYSQL_PASSWORD}
       driver-class-name: com.mysql.jdbc.Driver
       hikari:
         maximum-pool-size: 2
@@ -27,7 +27,7 @@ eureka:
         healthcheck: true 
         fetch-registry: true
         serviceUrl:
-            defaultZone: http://13.125.249.86:8761/eureka/
+            defaultZone: http://{YOUR_EUREKA_ADDRESS}:8761/eureka/
     instance:
         instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
         preferIpAddress: true
@@ -52,9 +52,9 @@ spring:
         fotmat_sql: true
         
     datasource:
-      url: jdbc:mysql://13.209.77.24:3306/notice
-      username: sangmin
-      password: tkdals12
+      url: jdbc:mysql://{YOUR_MYSQL_ADDRESS}:3306/notice
+      username: {MYSQL_ID}
+      password: {MYSQL_PASSWORD}
       driver-class-name: com.mysql.jdbc.Driver
       hikari:
         maximum-pool-size: 2
@@ -68,7 +68,7 @@ eureka:
         healthcheck: true 
         fetch-registry: true
         serviceUrl:
-            defaultZone: http://13.125.249.86:8761/eureka/
+            defaultZone: http://{YOUR_EUREKA_ADDRESS}:8761/eureka/
     instance:
         instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
         preferIpAddress: true
