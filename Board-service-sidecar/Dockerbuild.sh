@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#mvn package
-docker build -t phantasmicmeans/board-service-sidecar:latest .
-docker push phantasmicmeans/board-service-sidecar:latest
+mvn package
+docker build -t {YOUR_DOKCER_ID}/board-service-sidecar:latest .
+docker push {YOUR_DOKCER_ID}/board-service-sidecar:latest
 
