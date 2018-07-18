@@ -1,6 +1,6 @@
 #!/bin/bash
 
 mvn package
-docker build -t phantasmicmeans/api-gateway:latest .
-docker push phantasmicmeans/api-gateway:latest
+docker build -t {YOUR_DOKCER_ID}/api-gateway:latest .
+docker push {YOUR_DOCKER_ID}/api-gateway:latest
 
