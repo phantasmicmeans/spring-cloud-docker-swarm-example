@@ -22,7 +22,6 @@ public class CacheManagerCheck implements CommandLineRunner {
 		logger.info("\n\n" + "===========================================\n"
 				+ "Using cacheManager :" + this.cacheManager.getClass().getName() + "\n"
 				+ "=========================================\n\n");
-		
 	}
 	
 	public void putCache()
