@@ -1,7 +1,7 @@
 #!/bin/bash
 
 mvn package
-docker build -t phantasmicmeans/story-service:latest .
-docker push phantasmicmeans/story-service:latest
+docker build -t {YOUR_DOKCER_ID}/story-service:latest .
+docker push {YOUR_DOKCER_ID}/story-service:latest
 
 
