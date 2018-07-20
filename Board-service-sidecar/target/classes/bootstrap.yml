@@ -1,8 +1,0 @@
-spring:
-    oauth2:
-      authorization:
-        token-key-access: isAuthenticated()
-      resource:
-        token-info-uri: http://192.168.10.178:8081/oauth/token
-
-    
