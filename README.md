@@ -1,3 +1,5 @@
+[![HitCount](http://hits.dwyl.io/phantasmicmeans/spring-cloud-docker-swarm-example.svg)](http://hits.dwyl.io/phantasmicmeans/spring-cloud-docker-swarm-example)
+
 Spring Cloud Netflix & Docker Swarm
 ==============
 
